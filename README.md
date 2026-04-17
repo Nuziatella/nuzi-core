@@ -1,5 +1,9 @@
 # Nuzi Core
 
+<p align="center">
+  <img src="icon.png" alt="Nuzi Core icon" width="192" />
+</p>
+
 `nuzi-core` is a shared runtime library for ArcheAge Classic addons.
 
 It packages the boring but necessary parts of addon work into one reusable dependency:

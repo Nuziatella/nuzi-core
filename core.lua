@@ -5,7 +5,7 @@ if type(api) == "table" and type(api._NuziCore) == "table" then
 end
 
 local Core = {
-    Version = "1.0.0"
+    Version = "1.0.1"
 }
 
 Core.Require = require("nuzi-core/require")

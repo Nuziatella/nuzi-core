@@ -4,7 +4,7 @@ local Core = require("nuzi-core/core")
 local addon = {
     name = "Nuzi Core",
     author = "Nuzi",
-    version = Core.Version or "1.0.0",
+    version = Core.Version or "1.0.1",
     desc = "Shared runtime library for Nuzi addons",
     library = true
 }

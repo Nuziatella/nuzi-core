@@ -18,26 +18,41 @@ local function resolveKeys(kind, mappings)
     return tostring(entry.x or "x"), tostring(entry.y or "y")
 end
 
-local function readOffset(widget)
+local function tryReadOffset(widget, methodName)
+    if widget == nil or type(widget[methodName]) ~= "function" then
+        return false, nil, nil
+    end
+    local ok, x, y = pcall(function()
+        return widget[methodName](widget)
+    end)
+    if not ok then
+        return false, nil, nil
+    end
+    x = tonumber(x)
+    y = tonumber(y)
+    if x == nil or y == nil then
+        return false, nil, nil
+    end
+    return true, x, y
+end
+
+local function readOffset(widget, options)
     if widget == nil then
         return nil, nil
     end
 
-    local ok, x, y = false, nil, nil
-    if widget.GetEffectiveOffset ~= nil then
-        ok, x, y = pcall(function()
-            return widget:GetEffectiveOffset()
-        end)
-    end
-    if (not ok or x == nil or y == nil) and widget.GetOffset ~= nil then
-        ok, x, y = pcall(function()
-            return widget:GetOffset()
-        end)
+    local cfg = type(options) == "table" and options or {}
+    local first = cfg.prefer_effective_offset == true and "GetEffectiveOffset" or "GetOffset"
+    local second = first == "GetOffset" and "GetEffectiveOffset" or "GetOffset"
+
+    local ok, x, y = tryReadOffset(widget, first)
+    if not ok then
+        ok, x, y = tryReadOffset(widget, second)
     end
     if not ok then
         return nil, nil
     end
-    return tonumber(x), tonumber(y)
+    return x, y
 end
 
 local function clearCursor()
@@ -90,8 +105,8 @@ function Positioning.ResolveKeys(kind, mappings)
     return resolveKeys(kind, mappings)
 end
 
-function Positioning.ReadOffset(widget)
-    return readOffset(widget)
+function Positioning.ReadOffset(widget, options)
+    return readOffset(widget, options)
 end
 
 function Positioning.Get(settings, kind, mappings, fallback)
@@ -117,7 +132,7 @@ function Positioning.Save(settings, kind, x, y, mappings, options)
 end
 
 function Positioning.SaveFromWidget(settings, kind, widget, mappings, options)
-    local x, y = readOffset(widget)
+    local x, y = readOffset(widget, options)
     if x == nil or y == nil then
         return false, nil
     end
@@ -205,7 +220,7 @@ function Positioning.BindDrag(window, targets, onStop, options)
                     return
                 end
 
-                local beforeX, beforeY = readOffset(window)
+                local beforeX, beforeY = readOffset(window, cfg)
                 if type(originalStop) == "function" then
                     pcall(originalStop, self, ...)
                 elseif window.StopMovingOrSizing ~= nil then
@@ -220,7 +235,7 @@ function Positioning.BindDrag(window, targets, onStop, options)
 
                 state.dragging = false
 
-                local x, y = readOffset(window)
+                local x, y = readOffset(window, cfg)
                 if x == nil or y == nil then
                     x, y = beforeX, beforeY
                 end

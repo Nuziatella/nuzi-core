@@ -150,6 +150,43 @@ local store = Settings.CreateAddonStore(Constants, {
 })
 ```
 
+### Events
+
+Use `Events.Create` for the addon API's global event bus. In the current client, that bus receives:
+
+- `UPDATE`
+- `CHAT_MESSAGE`
+- `TEAM_MEMBERS_CHANGED`
+- `UI_RELOADED`
+- `UPDATE_PING_INFO`
+- custom addon emits such as `raid_role_changed` and `ShowPopUp`
+
+`Off` and `ClearAll` stop callbacks registered through the Core event helper. The client does not expose a true unsubscribe for `api.On`, so Core keeps one dispatcher per event and manages its own handler list.
+
+For client events that are not on the global bus, use a private event window:
+
+```lua
+local inventoryEvents = Events.CreateEventWindow({
+    id = "myAddonInventoryEvents",
+    logger = logger
+})
+
+inventoryEvents:OnSafe("BAG_UPDATE", "bag update", function(...)
+    RefreshBag(...)
+end)
+
+inventoryEvents:OnSafe("BANK_UPDATE", "bank update", function(...)
+    RefreshBank(...)
+end)
+
+function addon.OnUnload()
+    events:ClearAll()
+    inventoryEvents:ClearAll()
+end
+```
+
+Core rejects client-blocked private events such as `HOUSE_TAX_INFO`, `UNIT_ENTERED_SIGHT`, and `UNIT_LEAVED_SIGHT` instead of marking them as registered.
+
 ### Update Loops
 
 Use `CreateTicker` to throttle `UPDATE` events without carrying your own elapsed accumulator:
@@ -211,10 +248,6 @@ end)
 events:OptionalOnSafe("CHAT_MESSAGE", "chat command", function(...)
     router:Handle(...)
 end)
-
-events:OptionalOnSafe("COMMUNITY_CHAT_MESSAGE", "community chat command", function(...)
-    router:Handle(...)
-end)
 ```
 
 ### Window Position Persistence
@@ -239,6 +272,8 @@ positions:ApplyAndBind(window, nil, "window")
 ```
 
 That applies the saved position and binds dragging in one call. With `require_shift = true`, the window only drags while shift is held.
+
+Position saves use anchor-space `GetOffset()` by default so different UI scales do not drift. Use `prefer_effective_offset = true` only when a window intentionally stores scaled screen coordinates.
 
 ## Modules
 

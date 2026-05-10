@@ -5,7 +5,7 @@ if type(api) == "table" and type(api._NuziCore) == "table" then
 end
 
 local Core = {
-    Version = "2.0.3"
+    Version = "2.0.4"
 }
 
 local function normalizeApiStringArg(value)

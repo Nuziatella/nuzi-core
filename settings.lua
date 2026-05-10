@@ -94,6 +94,16 @@ local function normalizeStringList(values)
     return list
 end
 
+local function tableHasEntries(tbl)
+    if type(tbl) ~= "table" then
+        return false
+    end
+    for _ in pairs(tbl) do
+        return true
+    end
+    return false
+end
+
 local function parseFlatTableText(raw)
     if type(raw) ~= "string" then
         return nil
@@ -118,7 +128,7 @@ local function parseFlatTableText(raw)
         end
     end
 
-    if next(output) ~= nil then
+    if tableHasEntries(output) then
         return output
     end
     return nil
